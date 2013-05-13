@@ -163,5 +163,6 @@ pip-log.txt
 .DS_Store
 
 #Server specific files
+Config.php
 /API/Config.php
 /public/1/tests/
