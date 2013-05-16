@@ -11,8 +11,7 @@
         private $queryBuilder;
         private $preQueries;
         private $postQueries;
-        private $outputGenerator;
-        private $parameters;   
+        private $outputGenerator;  
         private $usagePolicy;
         private $executionTime;
         
@@ -22,10 +21,10 @@
          */
         public function __construct(){
             $timeStart = microtime(true);
-            $this->type = $this->getParameter('type', 'string', false);
-            
+            $this->type = $this->getParameter('type', 'string', true);
+
             //Setting the output format. JSON by default
-            $outputFormat = $this->getParameter('format', 'string', false);
+            $outputFormat = $this->getParameter('format', 'string');
             if($outputFormat == null){
                 $this->outputFormat = 'json';
             }
@@ -35,25 +34,28 @@
             
             //Setting the limit
             $this->limit = 0;
-            $this->limit = $this->getParameter('limit', 'int', false);
-            
+            $this->limit = $this->getParameter('limit', 'int');
             
             $this->createQueryByRequest();
-            $this->getAndOutputData();
+            
+            if(!APIConfig::$debug)
+                $this->getAndOutputData();
             
             $this->executionTime = microtime(true) - $timeStart;
-            
+                       
             if(APIConfig::$enableStatistics)
                 $this->addStatistics();
             
+            if(APIConfig::$debug)
+                $this->outputDebuggingInfo();
         }
        
         /**
          * Getting parameters in a safe way.
-         * Unsetting $_REQUEST[parametername]
-         * Returning the value if it's not added to the parameters list
+         * Unsetting $_REQUEST[$name]
+         * Returning the value
          */
-        private function getParameter($name, $type, $addToList = false)
+        private function getParameter($name, $type, $isRequired = false)
         {
             $parameter = null;
             switch($type){
@@ -72,22 +74,18 @@
                 
                 case 'string':
                 default:
-                    $parameter = mysql_real_escape_string($_REQUEST[$name]);
+                    $parameter = Database::getInstance()->makeStringSqlSafe($_REQUEST[$name]);
                     break;
             }           
-            
-            if($parameter != null && $addToList){
-                $this->parameters[][$name] = $parameter;
+
+            if(isset($_REQUEST[$name]))
+            {
+                unset($_REQUEST[$name]);
+                return $parameter;
             }
             else{
-                if(isset($_REQUEST[$name]))
-                {
-                    unset($_REQUEST[$name]);
-                    return $parameter;
-                }
-                else{
-                    return null;
-                }
+                if($isRequired) die('Necessary value not given');
+                return null;
             }
         }
         
@@ -96,15 +94,14 @@
          * This is where the queries are created!
          */
         private function createQueryByRequest()
-        {
-            
+        {         
             $joins = null;
             $conditions = array();
-            
+ 
             //Configuring the usage policies
             //By default the settings are set by the APIConfig class
             $this->usagePolicy = new UsagePolicy(strtolower($this->type));
-            
+
             switch(strtolower($this->type))
             {
                 case 'addresses':
@@ -173,8 +170,8 @@
                     * Optional:
                     * None 
                     */  
- 
-                    $conditions[] = new FieldCondition('PRB_fulltext.fulltext', null, $this->getParameter('filter', 'string', false), '%LIKE%', false);
+
+                    $conditions[] = new FieldCondition('PRB_fulltext.fulltext', null, $this->getParameter('filter', 'string', true), '%LIKE%', false);
                     
                     $conditions[] = new FieldCondition('PRB_person.registerblad_id', 'id');
                     $conditions[] = new FieldCondition('fornavne', 'firstnames');
@@ -249,7 +246,7 @@
                         LEFT JOIN PRB_adresse ON PRB_adresse.koordinat_id = PRB_koordinat.koordinat_id
                         LEFT JOIN PRB_fulltext ON PRB_adresse.registerblad_id = PRB_fulltext.registerblad_id';
 
-                    $groupBy = 'GROUP BY PRB_koordinat.koordinat_id';
+                    $groupBy = 'PRB_koordinat.koordinat_id';
 
                     break;
                 
@@ -265,50 +262,163 @@
                      * end (datetime)
                      * userid (int)
                      */
+                    
                     break;
                 
                 case 'registrationtypes':
                     /*
                      * API:
-                     * polle.dk/api/?type=registrationtypes&start=01012013130000&end=01012013140000&userid=217
+                     * polle.dk/api/?type=registrationtypes&type=1&start=01012013130000&end=01012013140000&userid=217
                      * Required:
                      * None
                      * 
                      * Optional:
+                     * type (string)
                      * start (datetime)
                      * end (datetime)
                      * userid (int)
-                     */                    
+                     */        
+                    
+                    //Only internal requests allowed
+                    $this->usagePolicy = new UsagePolicy(strtolower($this->type), -1, true);
+                    
+                    $conditions[] = new FieldCondition('type', null, $this->getParameter('type', 'string'), 'LIKE');
+                    $conditions[] = new FieldCondition('bruger_id', 'userid', $this->getParameter('userid', 'int'), '=');
+                    $conditions[] = new FieldCondition('tidspunkt', 'timestamp', $this->getParameter('start', 'datetime'), '>');
+                    $conditions[] = new FieldCondition('tidspunkt', 'timestamp', $this->getParameter('end', 'datetime'), '<');
+                    
+                    $joins = 'PRB_registrering';
+                    
                     break;
                 
-                case 'searches':
+                case 'registrationscount':
                     /*
                      * API:
-                     * polle.dk/api/?type=searches&userid=217
+                     * polle.dk/api/?type=registrationscount&type=1&start=01012013130000&end=01012013140000&userid=217
+                     * Required:
+                     * None
+                     * 
+                     * Optional:
+                     * type (string)
+                     * start (datetime)
+                     * end (datetime)
+                     * userid (int)
+                     */        
+                    
+                    $conditions[] = new FieldCondition('count(registrering_id)', 'antal');
+                    //$conditions[] = new FieldCondition('DATE_FORMAT(tidspunkt, \'%d-%m-%Y\' )', 'date'); 
+                    $conditions[] = new FieldCondition('tidspunkt', 'date'); 
+                    $conditions[] = new FieldCondition('type', null, $this->getParameter('type', 'string'), 'LIKE', false);
+                    $conditions[] = new FieldCondition('bruger_id', 'userid', $this->getParameter('userid', 'int'), '=');
+                    $conditions[] = new FieldCondition('tidspunkt', 'timestamp', $this->getParameter('start', 'datetime'), '>', false);
+                    $conditions[] = new FieldCondition('tidspunkt', 'timestamp', $this->getParameter('end', 'datetime'), '<', false);
+                    
+                    $joins = 'PRB_registrering';
+                    $groupBy = 'date(tidspunkt)';
+                    
+                    break;                
+                
+                case 'usersearches':
+                    /*
+                     * API:
+                     * polle.dk/api/?type=usersearches&userid=217
                      * Required:
                      * userid (int)
                      * 
                      * Optional:
                      * None
-                     */                         
+                     */             
+                    
+                    //Only internal requests allowed
+                    $this->usagePolicy = new UsagePolicy(strtolower($this->type), -1, true);
+                    
+                    $conditions[] = new FieldCondition('search_id', 'searchid');
+                    $conditions[] = new FieldCondition('description', 'description');
+                    $conditions[] = new FieldCondition('user_id', 'userid', $this->getParameter('userid', 'int', true), '=', false);
+                    
+                    //Obs: Mangler søgekritierier, som pt ikke hentes
+                    
+                    $joins = 'PRB_user_search';
+                    
                     break;
                 
-                case 'favorites':
+                case 'userfavorites':
                     /*
                      * API:
-                     * polle.dk/api/?type=favorites&userid=217
+                     * polle.dk/api/?type=userfavorites&userid=217
                      * Required:
                      * userid (int)
                      * 
                      * Optional:
                      * None
-                     */                      
+                     */      
+                    
+                    //Only internal requests allowed
+                    $this->usagePolicy = new UsagePolicy(strtolower($this->type), -1, true);
+                    
+                    $conditions[] = new FieldCondition('bruger_favorit.bruger_id', null, $this->getParameter('userid', 'int', true), '=');                    
+                    $conditions[] = new FieldCondition('station.station_id');
+                    $conditions[] = new FieldCondition('station.nummer', 'station_nummer');
+                    $conditions[] = new FieldCondition('station.navn', 'station_navn');
+                    $conditions[] = new FieldCondition('filmrulle.filmrulle_id');
+                    $conditions[] = new FieldCondition('filmrulle.nummer', 'filmrulle_nummer');
+                    $conditions[] = new FieldCondition('registerblad.registerblad_id', 'id');
+                    $conditions[] = new FieldCondition('registerblad_nummerering.nummer', 'registerblad_nummer');
+                    $conditions[] = new FieldCondition('person.fornavne');
+                    $conditions[] = new FieldCondition('person.efternavn');
+                    $conditions[] = new FieldCondition('person.foedselsdag');
+                    $conditions[] = new FieldCondition('person.foedselsmaaned');
+                    $conditions[] = new FieldCondition('person.foedselsaar');
+                    $conditions[] = new FieldCondition('person.gift', 'gift');
+ 
+                    //$orderBy = 'person.efternavn, person.fornavne';
+                    
+                    $joins = 'PRB_registerblad as registerblad
+                                LEFT JOIN PRB_person as person ON registerblad.registerblad_id = person.registerblad_id
+                                LEFT JOIN PRB_station as station on registerblad.station_id = station.station_id
+                                LEFT JOIN PRB_filmrulle as filmrulle ON registerblad.filmrulle_id = filmrulle.filmrulle_id
+                                LEFT JOIN PRB_registerblad_nummerering as registerblad_nummerering ON registerblad.registerblad_id = registerblad_nummerering.registerblad_id
+                                LEFT JOIN PRB_bruger_favorit as bruger_favorit ON registerblad.registerblad_id = bruger_favorit.registerblad_id
+                                LEFT OUTER JOIN PRB_foedested as foedested ON person.foedested_id = foedested.foedested_id';
                     break;
                 
                 case 'activities':
                     /*
                      * API:
-                     * polle.dk/api/?type=activities&start=01012013130000&end=01012013140000&userid=217
+                     * polle.dk/api/?type=activities&type=2&start=01012013130000&end=01012013140000&userid=217
+                     * Required:
+                     * None
+                     * 
+                     * Optional:
+                     * itemid (int)
+                     * item (string)
+                     * action (string)
+                     * start (datetime)
+                     * end (datetime)
+                     * userid (int)
+                     */                    
+                    
+                    //Only internal requests allowed
+                    $this->usagePolicy = new UsagePolicy(strtolower($this->type), -1, true);
+                    
+                    $conditions[] = new FieldCondition('id');
+                    $conditions[] = new FieldCondition('itemId', 'itemid', $this->getParameter('itemid', 'int'), '=');
+                    $conditions[] = new FieldCondition('item', null, $this->getParameter('item', 'string'), 'LIKE');
+                    $conditions[] = new FieldCondition('action', null, $this->getParameter('action', 'string'), 'LIKE');
+                    $conditions[] = new FieldCondition('details');
+                    $conditions[] = new FieldCondition('tidspunkt', 'timestamp', $this->getParameter('start', 'datetime'), '>', false);
+                    $conditions[] = new FieldCondition('tidspunkt', 'timestamp', $this->getParameter('end', 'datetime'), '<', false);
+                    $conditions[] = new FieldCondition('timestamp');
+                    $conditions[] = new FieldCondition('userId', 'userid', $this->getParameter('userid', 'int'), '=');
+                    
+                    $joins = 'PRB_log';
+                    
+                    break;
+                
+                case 'searchescount':
+                    /*
+                     * API:
+                     * polle.dk/api/?type=searchescount&start=01012013130000&end=01012013140000&userid=217
                      * Required:
                      * None
                      * 
@@ -316,7 +426,18 @@
                      * start (datetime)
                      * end (datetime)
                      * userid (int)
-                     */                    
+                     */
+                      
+                    $conditions[] = new FieldCondition('count(id)', 'antal');
+                    $conditions[] = new FieldCondition('timestamp', 'date');
+                    $conditions[] = new FieldCondition('results', null, $this->getParameter('results', 'string'), '=');
+                    $conditions[] = new FieldCondition('search_app', 'searchapp', $this->getParameter('searchapp', 'string'), 'LIKE');
+                    $conditions[] = new FieldCondition('timestamp', null, $this->getParameter('start', 'datetime'), '>', false);
+                    $conditions[] = new FieldCondition('timestamp', null, $this->getParameter('end', 'datetime'), '<', false);
+                    $conditions[] = new FieldCondition('user_id', 'userid', $this->getParameter('userid', 'int'), '=');
+                    
+                    $joins = 'KSASearch_searches';
+                    
                     break;
                 
                 case 'statistics':
@@ -332,7 +453,7 @@
                      * ip (string)
                      * stattype (string)
                      */                   
-                    
+                     
                     $conditions[] = new FieldCondition(APIConfig::$statisticsTableName . '.timestamp', null, $this->getParameter('start', 'datetime'), '>');
                     $conditions[] = new FieldCondition(APIConfig::$statisticsTableName . '.timestamp', null, $this->getParameter('end', 'datetime'), '<');
                     $conditions[] = new FieldCondition(APIConfig::$statisticsTableName . '.ip', null, $this->getParameter('ip', 'string'), 'LIKE');
@@ -373,11 +494,11 @@
                     
                     if($group == 'ip'){
                         $conditions[] = new FieldCondition('ip', 'ip');
-                        $groupBy = ' GROUP BY ' . APIConfig::$statisticsTableName . '.ip';
+                        $groupBy = APIConfig::$statisticsTableName . '.ip';
                     }
                     else if($group == 'type'){
                         $conditions[] = new FieldCondition('type', 'type');
-                        $groupBy = ' GROUP BY ' . APIConfig::$statisticsTableName . '.type';
+                        $groupBy = APIConfig::$statisticsTableName . '.type';
                     }
                     
                     break;                       
@@ -392,12 +513,12 @@
                      * tags
                      *
                      */  
-                    
+                   
                     $conditions[] = new FieldCondition('id');
                     $conditions[] = new FieldCondition('name');
                     $conditions[] = new FieldCondition('content');
                     $conditions[] = new FieldCondition('geometry');
-                    $conditions[] = new FieldCondition('tags', null, $this->getParameter('filter', 'string'), 'LIKE', true);
+                    $conditions[] = new FieldCondition('tags', null, $this->getParameter('filter', 'string'), '%LIKE%', true);
                     
                     $joins = 'ksa_mapdata';
                     
@@ -418,6 +539,18 @@
                      *
                      * Optional:
                      * None
+                     * 
+                     * Database table:
+                     * 
+                     *  CREATE TABLE IF NOT EXISTS `ksa_mapdata` (
+                        `id` int(11) NOT NULL AUTO_INCREMENT,
+                        `name` varchar(150) NOT NULL,
+                        `content` text NOT NULL,
+                        `geometry` text NOT NULL,
+                        `tags` char(250) NOT NULL,
+                        PRIMARY KEY (`id`)
+                        ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+                     * 
                      */  
                     $id = $this->getParameter('id', 'int');
                     $name = $this->getParameter('name', 'string');
@@ -455,7 +588,7 @@
             //If the request is not allowed according to the given usage policy, the request is stopped
             if(!$this->usagePolicy->requestAllowed()){
                 //echo json_encode(array('error' => 'No more requests allowed by this type and IP'));
-                die('No more requests allowed by this type and IP');
+                die('Request not allowed');
             }
             
             //Constructing the query
@@ -478,7 +611,15 @@
         private function addStatistics()
         {
             $Statistics = new Statistics();
-            $Statistics->addRequestEntry($this->type, $this->queryBuilder->toJSON(), $this->executionTime);
+            $Statistics->addRequestEntry($this->type, $this->queryBuilder->toJSON(), $this->executionTime, $this->outputGenerator->results);
+        }
+        
+        /**
+         * Output debug information
+         */
+        private function outputDebuggingInfo(){
+            var_dump($this);
+            die();
         }
     }
        

@@ -49,7 +49,7 @@ class UsagePolicy {
      */
     public function requestAllowed()
     {
-        if($this->internalOnly){
+        if($this->internalRequestsOnly){
             if($_SERVER['SERVER_ADDR'] != $_SERVER['REMOTE_ADDR'])
                 return false;
         }
@@ -69,13 +69,14 @@ class UsagePolicy {
     {
         $query = "SELECT COUNT(id) as requestCount FROM api_statistics WHERE ";
         
-        if($this->requestType != 'all')
-            $query = $query . "type = \"" . $this->requestType .  "\" AND ";
+        $query = $query . "type = \"" . $this->requestType .  "\" AND ";
         
         
         $startTime = date("Y-m-d H:i:s", mktime(date("H"), date("i"), date("s")-$this->timeRange, date("n"), date("j"), date("Y")));  
 
-        $query = $query . "timestamp > '$startTime'";        
+        $query = $query . "timestamp > '$startTime' ";        
+        
+        //$query = $query . 'AND ip LIKE \'' . $_SERVER['REMOTE_ADDR'] . '\'';
         
         $queryResult = Database::getInstance()->runQueryGetAssoc($query);
         

@@ -2,6 +2,7 @@
 
     class OutputGenerator{
         private $result;
+        public $results;
         private $returnType;
         private $output;
         
@@ -43,6 +44,7 @@
             }
             
             $this->output .= json_encode(array('results'=>$i));
+            $this->results = $i;
             
             $this->endJSON();
         }

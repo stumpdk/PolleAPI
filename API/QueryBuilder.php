@@ -107,15 +107,18 @@
                             //If there is more than one condition, the conditions are added separatly
                             foreach($conditionValues as $value){
                                 //$conditions .= $curCondition->field . ' LIKE \'%' . $value . '%\' AND ';
-                                $conditions .= $curCondition->field . ' ' . str_replace('|VALUE|', $value, $curCondition->operator) . ' AND ';
+                                $newCondition = $curCondition->field . ' ' . str_replace('|VALUE|', $value, $curCondition->operator) . ' AND ';
+                                $conditions .= $newCondition;
                                 
-                                $this->conditionsAsString[] = $curCondition->field . ' LIKE \'%' . $value . '%\'';
+                                $this->conditionsAsString[] = $newCondition;
                             }           
                         }
                         else{
                            // $conditions .= $curCondition->field . ' ' . $curCondition->operator . ' \'' . $curCondition->value . '\' AND '; 
-                            $conditions .= $curCondition->field . ' ' . str_replace('|VALUE|', $curCondition->value, $curCondition->operator) . ' AND ';
-                            $this->conditionsAsString[] = $curCondition->field . ' ' . $curCondition->operator . ' \'' . $curCondition->value . '\'';
+                            $newCondition = $curCondition->field . ' ' . str_replace('|VALUE|', $curCondition->value, $curCondition->operator) . ' AND ';
+                            $conditions .= $newCondition;
+                            
+                            $this->conditionsAsString[] = $newCondition;
                         }
                     }
                 }
@@ -136,7 +139,7 @@
         private function addGroupByToQuery()
         {
             if($this->groupBy){
-                $this->sqlQuery = str_replace('%GROUPBY%', $this->groupBy, $this->sqlQuery);
+                $this->sqlQuery = str_replace('%GROUPBY%', ' GROUP BY (' . $this->groupBy . ')', $this->sqlQuery);
             }
             else{
                 $this->sqlQuery = str_replace('%GROUPBY%', '', $this->sqlQuery);

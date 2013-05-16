@@ -43,7 +43,7 @@ class Database {
      */
     public function runQueryGetAssocList($query)
     {
-        $result = $this->mysqli->query($query) or die("Error: " . $query);
+        $result = $this->mysqli->query($query) or die('Error: ' . $query . ' ' . $this->mysqli->error);
         return $result->fetch_all(MYSQLI_ASSOC);              
     }   
     
@@ -54,7 +54,7 @@ class Database {
      */
     public function runQueryGetAssoc($query)
     {
-        $result = $this->mysqli->query($query) or die("Error: " . $query);
+        $result = $this->mysqli->query($query) or die('Error: ' . $query . ' ' . $this->mysqli->error);
         return $result->fetch_assoc();              
     }     
     
@@ -64,7 +64,7 @@ class Database {
      * @param string query 
      */
     public function runQueryGetResult($query){
-        $result = $this->mysqli->query($query) or die("Error: " . $query);
+        $result = $this->mysqli->query($query) or die('Error: ' . $query . ' ' . $this->mysqli->error);
         return $result;
     }
     
@@ -80,13 +80,17 @@ class Database {
         if(sizeof($queries)>1){
             foreach($queries as $curQuery){
                 if(strlen($curQuery)>0)
-                    $this->mysqli->query($curQuery) or die("Error: " . $curQuery);
+                    $this->mysqli->query($curQuery) or die('Error: ' . $queries . ' ' . $this->mysqli->error);
             }        
         }
         else{
             if(strlen($queries)>0)
-                $this->mysqli->query($queries) or die("Error: " . $this->mysqli->error. " " . $queries);
+                $this->mysqli->query($queries) or die('Error: ' . $query . ' ' . $this->mysqli->error);
         }
+    }
+    
+    public function makeStringSqlSafe($string){
+        return $this->mysqli->real_escape_string($string);
     }
 }
 
