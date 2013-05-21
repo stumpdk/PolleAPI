@@ -316,6 +316,17 @@
                     $joins = 'PRB_registrering';
                     $groupBy = 'date(tidspunkt)';
                     
+                    $group = strtolower($this->getParameter('group', 'string', true));
+                    
+                    if(is_null($group)) die();
+                    
+                    if($group == 'date'){
+                        $groupBy = 'date(tidspunkt)';;
+                    }
+                    else if($group == 'hour'){
+                        $groupBy = 'hour(tidspunkt)';;
+                    }                    
+                    
                     break;                
                 
                 case 'usersearches':
@@ -518,7 +529,7 @@
                     $conditions[] = new FieldCondition('name');
                     $conditions[] = new FieldCondition('content');
                     $conditions[] = new FieldCondition('geometry');
-                    $conditions[] = new FieldCondition('tags', null, $this->getParameter('filter', 'string'), '%LIKE%', true);
+                    $conditions[] = new FieldCondition('tags', null, $this->getParameter('tags', 'string'), '%LIKE%', true);
                     
                     $joins = 'ksa_mapdata';
                     

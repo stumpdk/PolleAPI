@@ -67,16 +67,15 @@ class UsagePolicy {
      */
     private function getNumberOfRequests()
     {
+        $startTime = date("Y-m-d H:i:s", mktime(date("H"), date("i"), date("s")-$this->timeRange, date("n"), date("j"), date("Y")));  
+        
         $query = "SELECT COUNT(id) as requestCount FROM api_statistics WHERE ";
         
         $query = $query . "type = \"" . $this->requestType .  "\" AND ";
         
-        
-        $startTime = date("Y-m-d H:i:s", mktime(date("H"), date("i"), date("s")-$this->timeRange, date("n"), date("j"), date("Y")));  
-
         $query = $query . "timestamp > '$startTime' ";        
         
-        //$query = $query . 'AND ip LIKE \'' . $_SERVER['REMOTE_ADDR'] . '\'';
+        $query = $query . 'AND ip LIKE \'' . $_SERVER['REMOTE_ADDR'] . '\'';
         
         $queryResult = Database::getInstance()->runQueryGetAssoc($query);
         
