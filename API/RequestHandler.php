@@ -535,7 +535,7 @@
                     
                     break;
                 
-                case 'mapdatacreate':
+                case 'createmapdata':
                     /*
                      * Putting the map data for the generic map presenter.
                      * Special case in which data is added!
@@ -587,7 +587,15 @@
                     }
                     
                     Database::getInstance()->runQueryQueue($query);
-                    die();
+                    $id = Database::getInstance()->getInsertId();
+       
+                    $conditions[] = new FieldCondition('id', null, $id, '=');
+                    $conditions[] = new FieldCondition('name');
+                    $conditions[] = new FieldCondition('content');
+                    $conditions[] = new FieldCondition('geometry');
+                    $conditions[] = new FieldCondition('tags');
+                    
+                    $joins = 'ksa_mapdata';
                     
                     break;                
                 

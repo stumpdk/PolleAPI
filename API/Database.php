@@ -92,6 +92,10 @@ class Database {
     public function makeStringSqlSafe($string){
         return $this->mysqli->real_escape_string($string);
     }
+    
+    public function getInsertId(){
+        return $this->mysqli->insert_id;
+    }
 }
 
 ?>
