@@ -2,7 +2,7 @@
 
     class QueryBuilder{
         //public $sqlResult;
-        public $sqlQuery = 'SELECT %FIELDS% %JOINS% %CONDITIONS% %GROUPBY% LIMIT %LIMIT%';
+        public $sqlQuery = 'SELECT %FIELDS% %JOINS% %CONDITIONS% %GROUPBY% %ORDERBY% LIMIT %LIMIT%';
         private $fieldConditions;
         private $conditionsAsString;
         private $generalLimit;
@@ -21,11 +21,12 @@
          * @param type $postQueries
          * @param type $groupBy
          */
-        public function __construct($fields, $joins, $limit = 0, $groupBy = null)
+        public function __construct($fields, $joins, $limit = 0, $groupBy = null, $orderBy = null)
         {           
             $this->fieldConditions = $fields;
             $this->joins = $joins;
             $this->groupBy = $groupBy;
+            $this->orderBy = $orderBy;
             
             $this->generalLimit = APIConfig::$generalQueryLimit;
             
@@ -40,6 +41,7 @@
             $this->addJoinsToQuery();
             $this->addConditionsToQuery();
             $this->addGroupByToQuery();
+            $this->addOrderByToQuery();
             $this->addLimitToQuery();
         }
         
@@ -138,13 +140,26 @@
          */
         private function addGroupByToQuery()
         {
-            if($this->groupBy){
-                $this->sqlQuery = str_replace('%GROUPBY%', ' GROUP BY (' . $this->groupBy . ')', $this->sqlQuery);
+            if(!is_null($this->groupBy)){
+                $this->sqlQuery = str_replace('%GROUPBY%', ' GROUP BY ' . $this->groupBy , $this->sqlQuery);
             }
             else{
                 $this->sqlQuery = str_replace('%GROUPBY%', '', $this->sqlQuery);
             }
         }
+        
+        /**
+         * Adding ORDER BY to the query
+         */
+        private function addOrderByToQuery()
+        {
+            if(!is_null($this->orderBy)){
+                $this->sqlQuery = str_replace('%ORDERBY%', ' ORDER BY ' . $this->orderBy , $this->sqlQuery);
+            }
+            else{
+                $this->sqlQuery = str_replace('%ORDERBY%', '', $this->sqlQuery);
+            }
+        }        
         
         /**
          * Adding LIMIT to the query

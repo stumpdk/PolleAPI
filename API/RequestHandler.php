@@ -97,6 +97,7 @@
         {         
             $joins = null;
             $conditions = array();
+            $orderBy = null;
  
             //Configuring the usage policies
             //By default the settings are set by the APIConfig class
@@ -250,39 +251,51 @@
 
                     break;
                 
-                case 'registrationpoints':
+                case 'registrationpointstotal':
                     /*
                      * API:
-                     * polle.dk/api/?type=registrationpoints&start=01012013130000&end=01012013140000&userid=217
+                     * polle.dk/api/?type=registrationpointstotal&minpoints=250&userid=217
                      * Required:
                      * None
                      * 
                      * Optional:
-                     * start (datetime)
-                     * end (datetime)
+                     * minpoints (int)
                      * userid (int)
                      */
+                    
+                    $conditions[] = new FieldCondition('(SUM( `hovedpersoner` ) + SUM( `stillinger` ) * 0.5 + SUM( `aegtefaeller` ) + SUM( `boern` ) * 0.5 + SUM( `adresser` ) + SUM( `registerblade` ) * 0.5 + SUM(andre_point))', 'points');
+                    $conditions[] = new FieldCondition('joomla_users.username', 'name');
+                    $conditions[] = new FieldCondition('PRB_forening.forening');
+                    $conditions[] = new FieldCondition('bruger_id', 'userid', $this->getParameter('userid', 'int'), '=', true);
+                    $minPoints = $this->getParameter('minpoints', 'int');
+                    
+                    $joins = 'PRB_bruger LEFT OUTER JOIN PRB_forening ON PRB_bruger.forening_id = PRB_forening.forening_id
+                              LEFT JOIN joomla_users ON PRB_bruger.bruger_id = joomla_users.id';
+                    
+                    $groupBy = 'userid';
+                    
+                    if(!is_null($minPoints))
+                        $groupBy = 'userid HAVING points > ' . $minPoints;   
+                    
+                    $orderBy = 'points DESC';
                     
                     break;
                 
                 case 'registrationtypes':
                     /*
                      * API:
-                     * polle.dk/api/?type=registrationtypes&type=1&start=01012013130000&end=01012013140000&userid=217
+                     * polle.dk/api/?type=registrationtypes&registrationtype=1&start=01012013130000&end=01012013140000&userid=217
                      * Required:
                      * None
                      * 
                      * Optional:
-                     * type (string)
+                     * registrationtype (int)
                      * start (datetime)
                      * end (datetime)
                      * userid (int)
                      */        
                     
-                    //Only internal requests allowed
-                    $this->usagePolicy = new UsagePolicy(strtolower($this->type), -1, true);
-                    
-                    $conditions[] = new FieldCondition('type', null, $this->getParameter('type', 'string'), 'LIKE');
+                    $conditions[] = new FieldCondition('type', null, $this->getParameter('registrationtype', 'int'), 'LIKE');
                     $conditions[] = new FieldCondition('bruger_id', 'userid', $this->getParameter('userid', 'int'), '=');
                     $conditions[] = new FieldCondition('tidspunkt', 'timestamp', $this->getParameter('start', 'datetime'), '>');
                     $conditions[] = new FieldCondition('tidspunkt', 'timestamp', $this->getParameter('end', 'datetime'), '<');
@@ -294,39 +307,51 @@
                 case 'registrationscount':
                     /*
                      * API:
-                     * polle.dk/api/?type=registrationscount&type=1&start=01012013130000&end=01012013140000&userid=217
+                     * polle.dk/api/?type=registrationscount&registrationtype=1&start=01012013130000&end=01012013140000&userid=217
                      * Required:
                      * None
                      * 
                      * Optional:
-                     * type (string)
+                     * registrationtype (int)
+                     * group (string)
                      * start (datetime)
                      * end (datetime)
                      * userid (int)
                      */        
                     
                     $conditions[] = new FieldCondition('count(registrering_id)', 'antal');
-                    //$conditions[] = new FieldCondition('DATE_FORMAT(tidspunkt, \'%d-%m-%Y\' )', 'date'); 
-                    $conditions[] = new FieldCondition('tidspunkt', 'date'); 
-                    $conditions[] = new FieldCondition('type', null, $this->getParameter('type', 'string'), 'LIKE', false);
-                    $conditions[] = new FieldCondition('bruger_id', 'userid', $this->getParameter('userid', 'int'), '=');
+                    $conditions[] = new FieldCondition('beskrivelse', 'description');
+                    $conditions[] = new FieldCondition('point', 'point');
+                    $conditions[] = new FieldCondition('type', null, $this->getParameter('registrationtype', 'string'), 'LIKE', true);
+                    $conditions[] = new FieldCondition('bruger_id', 'userid', $this->getParameter('userid', 'int'), '=', true);
+                    $conditions[] = new FieldCondition('username', 'username');
                     $conditions[] = new FieldCondition('tidspunkt', 'timestamp', $this->getParameter('start', 'datetime'), '>', false);
                     $conditions[] = new FieldCondition('tidspunkt', 'timestamp', $this->getParameter('end', 'datetime'), '<', false);
                     
-                    $joins = 'PRB_registrering';
-                    $groupBy = 'date(tidspunkt)';
+                    $joins = 'PRB_registrering LEFT JOIN PRB_registreringstype_beskrivelser ON PRB_registrering.type = PRB_registreringstype_beskrivelser.registreringstype_id
+                        LEFT JOIN joomla_users ON PRB_registrering.bruger_id = joomla_users.id';
+                    //$groupBy = 'date(tidspunkt)';
                     
-                    $group = strtolower($this->getParameter('group', 'string', true));
-                    
-                    if(is_null($group)) die();
-                    
-                    if($group == 'date'){
-                        $groupBy = 'date(tidspunkt)';;
+                    $group = strtolower($this->getParameter('group', 'string', false));
+
+                    if(!is_null($group)){
+                        if($group == 'date'){
+                            $groupBy = 'date(tidspunkt)';
+                        }
+                        else if($group == 'hour'){
+                            $groupBy = 'hour(tidspunkt)';
+                        }          
+                        else if($group == 'user'){
+                            $groupBy = 'userid';
+                        }    
+                        else if($group == 'type'){
+                            $groupBy = 'type';
+                        }    
+                        else if($group == 'user,type'){
+                            $groupBy = 'userid,type';
+                        }                          
                     }
-                    else if($group == 'hour'){
-                        $groupBy = 'hour(tidspunkt)';;
-                    }                    
-                    
+      
                     break;                
                 
                 case 'usersearches':
@@ -340,16 +365,14 @@
                      * None
                      */             
                     
-                    //Only internal requests allowed
-                    $this->usagePolicy = new UsagePolicy(strtolower($this->type), -1, true);
-                    
                     $conditions[] = new FieldCondition('search_id', 'searchid');
                     $conditions[] = new FieldCondition('description', 'description');
-                    $conditions[] = new FieldCondition('user_id', 'userid', $this->getParameter('userid', 'int', true), '=', false);
+                    $conditions[] = new FieldCondition('search_app', 'searchapp');
+                    $conditions[] = new FieldCondition('PRB_user_search.user_id', 'userid', $this->getParameter('userid', 'int', true), '=', false);
                     
                     //Obs: Mangler søgekritierier, som pt ikke hentes
                     
-                    $joins = 'PRB_user_search';
+                    $joins = 'PRB_user_search LEFT JOIN KSASearch_searches ON KSASearch_searches.id = PRB_user_search.search_id';
                     
                     break;
                 
@@ -364,9 +387,6 @@
                      * None
                      */      
                     
-                    //Only internal requests allowed
-                    $this->usagePolicy = new UsagePolicy(strtolower($this->type), -1, true);
-                    
                     $conditions[] = new FieldCondition('bruger_favorit.bruger_id', null, $this->getParameter('userid', 'int', true), '=');                    
                     $conditions[] = new FieldCondition('station.station_id');
                     $conditions[] = new FieldCondition('station.nummer', 'station_nummer');
@@ -380,6 +400,7 @@
                     $conditions[] = new FieldCondition('person.foedselsdag');
                     $conditions[] = new FieldCondition('person.foedselsmaaned');
                     $conditions[] = new FieldCondition('person.foedselsaar');
+                    $conditions[] = new FieldCondition('foedested.foedested');
                     $conditions[] = new FieldCondition('person.gift', 'gift');
  
                     //$orderBy = 'person.efternavn, person.fornavne';
@@ -527,9 +548,10 @@
                    
                     $conditions[] = new FieldCondition('id');
                     $conditions[] = new FieldCondition('name');
-                    $conditions[] = new FieldCondition('content');
+                    $conditions[] = new FieldCondition('content_da');
+                    $conditions[] = new FieldCondition('content_en');
                     $conditions[] = new FieldCondition('geometry');
-                    $conditions[] = new FieldCondition('tags', null, $this->getParameter('tags', 'string'), '%LIKE%', true);
+                    $conditions[] = new FieldCondition('tags', null, rawurldecode($this->getParameter('tags', 'string')), '%LIKE%', true);
                     
                     $joins = 'ksa_mapdata';
                     
@@ -556,7 +578,8 @@
                      *  CREATE TABLE IF NOT EXISTS `ksa_mapdata` (
                         `id` int(11) NOT NULL AUTO_INCREMENT,
                         `name` varchar(150) NOT NULL,
-                        `content` text NOT NULL,
+                        `content_da` text NOT NULL,
+                        `content_en` text NOT NULL,
                         `geometry` text NOT NULL,
                         `tags` char(250) NOT NULL,
                         PRIMARY KEY (`id`)
@@ -565,42 +588,75 @@
                      */  
                     $id = $this->getParameter('id', 'int');
                     $name = $this->getParameter('name', 'string');
-                    $content = $this->getParameter('content', 'string'); //JSON???
+                    $contentDa = $this->getParameter('content_da', 'string'); //JSON???
+                    $contentEn = $this->getParameter('content_en', 'string'); //JSON???
                     $geometry = $this->getParameter('geometry', 'string'); //JSON???
-                    $tags = $this->getParameter('tags', 'string');
+                    $tags = rawurldecode($this->getParameter('tags', 'string'));
                     
                     //Validating
-                    if(is_null($name) || is_null($content) ||  is_null( $geometry) || is_null($tags)) die('All parameters needs to be filled out');
+                    if(is_null($name) || is_null($contentDa) ||  is_null( $geometry) || is_null($tags)) die('All parameters needs to be filled out');
                     
                     //Inserting
                     if(is_null($id)){
-                        $query = 'INSERT INTO ksa_mapdata (`name`, `content`, `geometry`, `tags`) VALUES (\'' . $name . '\', \'' . $content . '\',\'' . $geometry . '\', \'' . $tags . '\' )';
+                        $query = 'INSERT INTO ksa_mapdata (`name`, `content_da`, `content_en`, `geometry`, `tags`) VALUES (\'' . $name . '\', \'' . $contentDa . '\',\'' . $contentEn . '\',\'' . $geometry . '\', \'' . $tags . '\' )';
+                        Database::getInstance()->runQueryQueue($query);
+                        $id = Database::getInstance()->getInsertId();
                     }
                     //Updating
                     else{
                         $query = 'UPDATE ksa_mapdata SET  
                             `name` =  \'' . $name . '\',
-                            `content` =  \'' . $content . '\',
+                            `content_da` =  \'' . $contentDa . '\',
+                            `content_en` =  \'' . $contentEn . '\',
                             `geometry` =  \'' . $geometry . '\',
                             `tags` =  \'' . $tags . '\' 
                             WHERE  `ksa_mapdata`.`id` =' . $id . ' limit 1';
+                        Database::getInstance()->runQueryQueue($query);
                     }
-                    
-                    Database::getInstance()->runQueryQueue($query);
-                    $id = Database::getInstance()->getInsertId();
-       
+                           
                     $conditions[] = new FieldCondition('id', null, $id, '=');
                     $conditions[] = new FieldCondition('name');
-                    $conditions[] = new FieldCondition('content');
+                    $conditions[] = new FieldCondition('content_da');
+                    $conditions[] = new FieldCondition('content_en');
                     $conditions[] = new FieldCondition('geometry');
                     $conditions[] = new FieldCondition('tags');
                     
                     $joins = 'ksa_mapdata';
                     
                     break;                
-                
-                default:
+                    
+                case 'deletemapdata':
+                    /*
+                     * Deleting objects that match the input on parameters id, name and tags
+                     * Special case in which data is deleted!
+                     * 
+                     * API:
+                     * polle.dk/api/?type=createmapdata&name=name&content=jsondata1&geometry=jsondata2&tags=tag1;tag2
+                     * Required:
+                     * name
+                     * content
+                     * geometry
+                     * tags
+                     *
+                     * Optional:
+                     * None
+                     * 
+                     */
+                    
+                    $id = $this->getParameter('id', 'int', true);
+                    $name = $this->getParameter('name', 'string', true);
+                    $content_da = $this->getParameter('content_da', 'string', true); //JSON???
+                    $content_en = $this->getParameter('content_en', 'string', true); //JSON???
+                    $geometry = $this->getParameter('geometry', 'string', true); //JSON???
+                    $tags = rawurldecode($this->getParameter('tags', 'string', true));
+                    
+                    $query = 'DELETE FROM ksa_mapdata WHERE id = \'' . $id . '\' AND name LIKE \'' . $name . '\' AND tags LIKE \'' .$tags . '\' LIMIT 1';
+                    Database::getInstance()->runQueryQueue($query);
                     die();
+                    
+                    break;
+                default:
+                    die('Service not supported');
                     break;
             }
 
@@ -611,7 +667,7 @@
             }
             
             //Constructing the query
-            $this->queryBuilder = new QueryBuilder($conditions, $joins, $this->limit, $groupBy);
+            $this->queryBuilder = new QueryBuilder($conditions, $joins, $this->limit, $groupBy, $orderBy);
         }
         
         /**
@@ -638,6 +694,8 @@
          */
         private function outputDebuggingInfo(){
             var_dump($this);
+            echo 'Query explained: <br>';
+            var_dump( Database::getInstance()->runQueryGetAssocList('EXPLAIN ' . $this->queryBuilder->sqlQuery) );
             die();
         }
     }
