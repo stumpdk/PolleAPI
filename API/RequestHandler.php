@@ -250,7 +250,24 @@
                     $groupBy = 'PRB_koordinat.koordinat_id';
 
                     break;
-                
+                case 'overallstatistics':
+                    /*
+                     * API:
+                     * polle.dk/api/?type=overallstatistics&stattype=completeregistrations
+                     * Required:
+                     * stattype (string)
+                     */
+                    
+                    $stattype = $this->getParameter('stattype', 'string');
+                    
+                    if($stattype == 'completed')
+                        $conditions[] = new FieldCondition('complete', null, 1, '=', false);
+                    
+                    $conditions[] = new FieldCondition('count(registerblad_id)', 'sum');
+                    
+                    $joins = "PRB_registerblad";
+                    
+                    break;
                 case 'registrationpointstotal':
                     /*
                      * API:
@@ -591,7 +608,7 @@
                     $contentDa = $this->getParameter('content_da', 'string'); //JSON???
                     $contentEn = $this->getParameter('content_en', 'string'); //JSON???
                     $geometry = $this->getParameter('geometry', 'string'); //JSON???
-                    $tags = rawurldecode($this->getParameter('tags', 'string'));
+                    $tags = strtolower( rawurldecode($this->getParameter('tags', 'string')) );
                     
                     //Validating
                     if(is_null($name) || is_null($contentDa) ||  is_null( $geometry) || is_null($tags)) die('All parameters needs to be filled out');
@@ -644,13 +661,8 @@
                      */
                     
                     $id = $this->getParameter('id', 'int', true);
-                    $name = $this->getParameter('name', 'string', true);
-                    $content_da = $this->getParameter('content_da', 'string', true); //JSON???
-                    $content_en = $this->getParameter('content_en', 'string', true); //JSON???
-                    $geometry = $this->getParameter('geometry', 'string', true); //JSON???
-                    $tags = rawurldecode($this->getParameter('tags', 'string', true));
                     
-                    $query = 'DELETE FROM ksa_mapdata WHERE id = \'' . $id . '\' AND name LIKE \'' . $name . '\' AND tags LIKE \'' .$tags . '\' LIMIT 1';
+                    $query = 'DELETE FROM ksa_mapdata WHERE id = \'' . $id . '\' LIMIT 1';
                     Database::getInstance()->runQueryQueue($query);
                     die();
                     
