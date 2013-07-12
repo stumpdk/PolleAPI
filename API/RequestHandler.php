@@ -43,7 +43,8 @@
             
             $this->executionTime = microtime(true) - $timeStart;
             
-            $this->addStatistics();
+            if(APIConfig::$enableStatistics)
+                $this->addStatistics();
             
         }
        
