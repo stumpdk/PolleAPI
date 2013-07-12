@@ -165,4 +165,3 @@ pip-log.txt
 #Server specific files
 Config.php
 /public/1/tests/
-/public/nbproject/private/
