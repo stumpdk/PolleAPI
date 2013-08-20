@@ -98,6 +98,7 @@
             $joins = null;
             $conditions = array();
             $orderBy = null;
+            $selectType = null;
  
             //Configuring the usage policies
             //By default the settings are set by the APIConfig class
@@ -572,6 +573,8 @@
                     
                     $joins = 'ksa_mapdata';
                     
+                    $selectType = rawurldecode($this->getParameter('selecttype', 'string'));
+                    
                     break;
                 
                 case 'createmapdata':
@@ -679,7 +682,7 @@
             }
             
             //Constructing the query
-            $this->queryBuilder = new QueryBuilder($conditions, $joins, $this->limit, $groupBy, $orderBy);
+            $this->queryBuilder = new QueryBuilder($conditions, $joins, $this->limit, $groupBy, $orderBy, $selectType);
         }
         
         /**

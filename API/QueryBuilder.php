@@ -8,6 +8,7 @@
         private $generalLimit;
         private $queryLimit;
         private $groupBy;
+        private $selectType;
         
         /**
          * 
@@ -20,13 +21,15 @@
          * @param type $preQueries
          * @param type $postQueries
          * @param type $groupBy
+         * @param type $selectType
          */
-        public function __construct($fields, $joins, $limit = 0, $groupBy = null, $orderBy = null)
+        public function __construct($fields, $joins, $limit = 0, $groupBy = null, $orderBy = null, $selectType = 'AND')
         {           
             $this->fieldConditions = $fields;
             $this->joins = $joins;
             $this->groupBy = $groupBy;
             $this->orderBy = $orderBy;
+            $this->selectType = $selectType;
             
             $this->generalLimit = APIConfig::$generalQueryLimit;
             
@@ -109,7 +112,7 @@
                             //If there is more than one condition, the conditions are added separatly
                             foreach($conditionValues as $value){
                                 //$conditions .= $curCondition->field . ' LIKE \'%' . $value . '%\' AND ';
-                                $newCondition = $curCondition->field . ' ' . str_replace('|VALUE|', $value, $curCondition->operator) . ' AND ';
+                                $newCondition = $curCondition->field . ' ' . str_replace('|VALUE|', $value, $curCondition->operator) . ' ' . $this->selectType . ' ';
                                 $conditions .= $newCondition;
                                 
                                 $this->conditionsAsString[] = $newCondition;
@@ -117,7 +120,7 @@
                         }
                         else{
                            // $conditions .= $curCondition->field . ' ' . $curCondition->operator . ' \'' . $curCondition->value . '\' AND '; 
-                            $newCondition = $curCondition->field . ' ' . str_replace('|VALUE|', $curCondition->value, $curCondition->operator) . ' AND ';
+                            $newCondition = $curCondition->field . ' ' . str_replace('|VALUE|', $curCondition->value, $curCondition->operator) . ' ' . $this->selectType . ' ';
                             $conditions .= $newCondition;
                             
                             $this->conditionsAsString[] = $newCondition;
@@ -126,7 +129,7 @@
                 }
 
                 //Removing the last ' AND '
-                $conditions = substr($conditions, 0, strlen($conditions)-4);
+                $conditions = substr($conditions, 0, strlen($conditions)-(strlen($this->selectType)+2));
             }
             else{
                 $conditions = ' ';
