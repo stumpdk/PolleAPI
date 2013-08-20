@@ -97,7 +97,7 @@
                 $firstRun = true;
                 foreach($this->fieldConditions as $curCondition){
                     //If both value and operator is set, the condition is created
-                    if($curCondition->value && $curCondition->operator){
+                    if($curCondition->value && strlen(trim($curCondition->value))>0 && $curCondition->operator){
                         //Adding 'WHERE' in first run
                         if($firstRun) { $conditions = ' WHERE '; $firstRun = false; }
                         
@@ -111,18 +111,21 @@
                         if(sizeof($conditionValues) > 1){          
                             //If there is more than one condition, the conditions are added separatly
                             foreach($conditionValues as $value){
-                                //$conditions .= $curCondition->field . ' LIKE \'%' . $value . '%\' AND ';
-                                $newCondition = $curCondition->field . ' ' . str_replace('|VALUE|', $value, $curCondition->operator) . ' ' . $this->selectType . ' ';
-                                $conditions .= $newCondition;
-                                
-                                $this->conditionsAsString[] = $newCondition;
+                                //No empty conditions
+                                if(strlen(trim($value))>0){
+                                    //$conditions .= $curCondition->field . ' LIKE \'%' . $value . '%\' AND ';
+                                    $newCondition = $curCondition->field . ' ' . str_replace('|VALUE|', $value, $curCondition->operator) . ' ' . $this->selectType . ' ';
+                                    $conditions .= $newCondition;
+
+                                    $this->conditionsAsString[] = $newCondition;
+                                }
                             }           
                         }
                         else{
-                           // $conditions .= $curCondition->field . ' ' . $curCondition->operator . ' \'' . $curCondition->value . '\' AND '; 
+                            // $conditions .= $curCondition->field . ' ' . $curCondition->operator . ' \'' . $curCondition->value . '\' AND '; 
                             $newCondition = $curCondition->field . ' ' . str_replace('|VALUE|', $curCondition->value, $curCondition->operator) . ' ' . $this->selectType . ' ';
                             $conditions .= $newCondition;
-                            
+
                             $this->conditionsAsString[] = $newCondition;
                         }
                     }
