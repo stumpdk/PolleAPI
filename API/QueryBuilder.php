@@ -30,7 +30,7 @@
             $this->groupBy = $groupBy;
             $this->orderBy = $orderBy;
             $this->selectType = $selectType;
-            
+       
             $this->generalLimit = APIConfig::$generalQueryLimit;
             
             if($limit > $this->generalLimit || $limit == 0){

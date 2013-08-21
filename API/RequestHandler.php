@@ -98,7 +98,7 @@
             $joins = null;
             $conditions = array();
             $orderBy = null;
-            $selectType = null;
+            $selectType = 'AND';
  
             //Configuring the usage policies
             //By default the settings are set by the APIConfig class
