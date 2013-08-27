@@ -20,6 +20,9 @@
          * Starting the receive and output classes.
          */
         public function __construct(){
+            
+            APIConfig::setDebuggingLevel();
+                        
             $timeStart = microtime(true);
             $this->type = $this->getParameter('type', 'string', true);
 
