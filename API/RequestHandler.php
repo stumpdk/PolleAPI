@@ -21,8 +21,8 @@
          */
         public function __construct(){
             
-            APIConfig::setDebuggingLevel();
-                        
+            error_reporting(APIConfig::$errorReportLevel);
+            
             $timeStart = microtime(true);
             $this->type = $this->getParameter('type', 'string', true);
 
