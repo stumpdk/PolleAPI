@@ -42,6 +42,9 @@
         //Whether or not the statistics should be enabled
         public static $enableStatistics = true;
         
+        //Wheter or not debugging should be enabled
+        public static $debug = false;
+        
         //Name for the table holding the statistics
         public static $statisticsTableName = 'api_statistics';
         
