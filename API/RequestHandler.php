@@ -285,13 +285,13 @@
                      */
                     
                     $conditions[] = new FieldCondition('(SUM( `hovedpersoner` ) + SUM( `stillinger` ) * 0.5 + SUM( `aegtefaeller` ) + SUM( `boern` ) * 0.5 + SUM( `adresser` ) + SUM( `registerblade` ) * 0.5 + SUM(andre_point))', 'points');
-                    $conditions[] = new FieldCondition('joomla_users.username', 'name');
+                    $conditions[] = new FieldCondition('j25_users.username', 'name');
                     $conditions[] = new FieldCondition('PRB_forening.forening');
                     $conditions[] = new FieldCondition('bruger_id', 'userid', $this->getParameter('userid', 'int'), '=', true);
                     $minPoints = $this->getParameter('minpoints', 'int');
                     
                     $joins = 'PRB_bruger LEFT OUTER JOIN PRB_forening ON PRB_bruger.forening_id = PRB_forening.forening_id
-                              LEFT JOIN joomla_users ON PRB_bruger.bruger_id = joomla_users.id';
+                              LEFT JOIN j25_users ON PRB_bruger.bruger_id = j25_users.id';
                     
                     $groupBy = 'userid';
                     
@@ -350,7 +350,7 @@
                     $conditions[] = new FieldCondition('tidspunkt', 'timestamp', $this->getParameter('end', 'datetime'), '<', false);
                     
                     $joins = 'PRB_registrering LEFT JOIN PRB_registreringstype_beskrivelser ON PRB_registrering.type = PRB_registreringstype_beskrivelser.registreringstype_id
-                        LEFT JOIN joomla_users ON PRB_registrering.bruger_id = joomla_users.id';
+                        LEFT JOIN j25_users ON PRB_registrering.bruger_id = j25_users.id';
                     //$groupBy = 'date(tidspunkt)';
                     
                     $group = strtolower($this->getParameter('group', 'string', false));
@@ -569,6 +569,7 @@
                    
                     $conditions[] = new FieldCondition('id');
                     $conditions[] = new FieldCondition('name');
+                    $conditions[] = new FieldCondition('header_en');
                     $conditions[] = new FieldCondition('content_da');
                     $conditions[] = new FieldCondition('content_en');
                     $conditions[] = new FieldCondition('geometry');
@@ -601,6 +602,7 @@
                      *  CREATE TABLE IF NOT EXISTS `ksa_mapdata` (
                         `id` int(11) NOT NULL AUTO_INCREMENT,
                         `name` varchar(150) NOT NULL,
+                        `header_en` varchar(150) NOT NULL,
                         `content_da` text NOT NULL,
                         `content_en` text NOT NULL,
                         `geometry` text NOT NULL,
@@ -611,6 +613,7 @@
                      */  
                     $id = $this->getParameter('id', 'int');
                     $name = $this->getParameter('name', 'string');
+                    $headerEn = $this->getParameter('header_en', 'string');
                     $contentDa = $this->getParameter('content_da', 'string'); //JSON???
                     $contentEn = $this->getParameter('content_en', 'string'); //JSON???
                     $geometry = $this->getParameter('geometry', 'string'); //JSON???
@@ -621,7 +624,7 @@
                     
                     //Inserting
                     if(is_null($id)){
-                        $query = 'INSERT INTO ksa_mapdata (`name`, `content_da`, `content_en`, `geometry`, `tags`) VALUES (\'' . $name . '\', \'' . $contentDa . '\',\'' . $contentEn . '\',\'' . $geometry . '\', \'' . $tags . '\' )';
+                        $query = 'INSERT INTO ksa_mapdata (`name`, `header_en`, `content_da`, `content_en`, `geometry`, `tags`) VALUES (\'' . $name . '\',\'' . $headerEn . '\', \'' . $contentDa . '\',\'' . $contentEn . '\',\'' . $geometry . '\', \'' . $tags . '\' )';
                         Database::getInstance()->runQueryQueue($query);
                         $id = Database::getInstance()->getInsertId();
                     }
@@ -629,6 +632,7 @@
                     else{
                         $query = 'UPDATE ksa_mapdata SET  
                             `name` =  \'' . $name . '\',
+                            `header_en`  =  \'' . $headerEn . '\',
                             `content_da` =  \'' . $contentDa . '\',
                             `content_en` =  \'' . $contentEn . '\',
                             `geometry` =  \'' . $geometry . '\',
@@ -639,6 +643,7 @@
                            
                     $conditions[] = new FieldCondition('id', null, $id, '=');
                     $conditions[] = new FieldCondition('name');
+                    $conditions[] = new FieldCondition('header_en');
                     $conditions[] = new FieldCondition('content_da');
                     $conditions[] = new FieldCondition('content_en');
                     $conditions[] = new FieldCondition('geometry');
@@ -683,6 +688,9 @@
                 //echo json_encode(array('error' => 'No more requests allowed by this type and IP'));
                 die('Request not allowed');
             }
+            
+            if($selectType == null)
+                $selectType = 'AND';
             
             //Constructing the query
             $this->queryBuilder = new QueryBuilder($conditions, $joins, $this->limit, $groupBy, $orderBy, $selectType);
