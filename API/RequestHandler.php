@@ -573,7 +573,7 @@ APIConfig::$debug = true;
                     $conditions[] = new FieldCondition('content_da');
                     $conditions[] = new FieldCondition('content_en');
                     $conditions[] = new FieldCondition('geometry');
-                    $conditions[] = new FieldCondition('tags', null, rawurldecode($this->getParameter('tags', 'string')), '%LIKE%', true);
+                    $conditions[] = new FieldCondition('tags', null, rawurldecode($this->getParameter('tags', 'string')), 'LIKE', true);
                     
                     $joins = 'ksa_mapdata';
                     
