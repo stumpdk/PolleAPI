@@ -238,20 +238,20 @@
        
                     $startdate = $this->getParameter('startdate', 'date', false);
                     $enddate = $this->getParameter('enddate', 'date', false);
-
-                    $conditions[] = new FieldCondition('PRB_adresse.adresse_dato', null, $startdate, '>', false);
-                    $conditions[] = new FieldCondition('PRB_adresse.adresse_dato', null, $enddate, '<', false);
+APIConfig::$debug = true;
+                   // $conditions[] = new FieldCondition('PRB_adresse.adresse_dato', null, $startdate, '>', false);
+                   // $conditions[] = new FieldCondition('PRB_adresse.adresse_dato', null, $enddate, '<', false);
                     $conditions[] = new FieldCondition('COUNT(adresse_id)', 'weight');
-                    $conditions[] = new FieldCondition('ROUND(latitude,4)', 'latitude');
-                    $conditions[] = new FieldCondition('ROUND(longitude,4)', 'longitude');
+                    $conditions[] = new FieldCondition('ROUND(lat,4)', 'latitude');
+                    $conditions[] = new FieldCondition('ROUND(lon,4)', 'longitude');
 
                     $conditions[] = new FieldCondition('PRB_fulltext.fulltext', null, $this->getParameter('filters', 'string', false), '%LIKE%', false);
 
                     $joins = 'PRB_koordinat
-                        LEFT JOIN PRB_adresse ON PRB_adresse.koordinat_id = PRB_koordinat.koordinat_id
+                        LEFT JOIN PRB_adresse ON PRB_adresse.koordinat_id = PRB_koordinat.id
                         LEFT JOIN PRB_fulltext ON PRB_adresse.registerblad_id = PRB_fulltext.registerblad_id';
-
-                    $groupBy = 'PRB_koordinat.koordinat_id';
+                    
+                    $groupBy = 'PRB_koordinat.id';
 
                     break;
                 case 'overallstatistics':
@@ -424,7 +424,7 @@
                     $conditions[] = new FieldCondition('foedested.foedested');
                     $conditions[] = new FieldCondition('person.gift', 'gift');
  
-                    //$orderBy = 'person.efternavn, person.fornavne';
+                    $orderBy = 'person.efternavn, person.fornavne';
                     
                     $joins = 'PRB_registerblad as registerblad
                                 LEFT JOIN PRB_person as person ON registerblad.registerblad_id = person.registerblad_id
@@ -567,7 +567,7 @@
                      *
                      */  
                    
-                    $conditions[] = new FieldCondition('id');
+                    $conditions[] = new FieldCondition('id', null, $this->getParameter('id', 'int'), '=', true);
                     $conditions[] = new FieldCondition('name');
                     $conditions[] = new FieldCondition('header_en');
                     $conditions[] = new FieldCondition('content_da');
