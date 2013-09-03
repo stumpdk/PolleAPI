@@ -59,6 +59,9 @@
         
         //When the number of requests is counted, this time range is used as a limit
         public static $requestCounterTimeRange = 86400;
+        
+        //Error reporting level
+        public static $errorReportLevel = 0;
     }
 
 ?>
