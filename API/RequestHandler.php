@@ -170,7 +170,7 @@
                     * API:
                     * polle.dk/api/?type=freetext&freetext=jens;tømrer
                     * Required:
-                    * freetext (string, separated by ";")
+                    * filter (string, separated by ";")
                     * 
                     * Optional:
                     * None 
@@ -178,7 +178,8 @@
 
                     $conditions[] = new FieldCondition('PRB_fulltext.fulltext', null, $this->getParameter('filter', 'string', true), '%LIKE%', false);
                     
-                    $conditions[] = new FieldCondition('PRB_person.registerblad_id', 'id');
+                    $conditions[] = new FieldCondition('PRB_person.person_id', 'id');
+                    $conditions[] = new FieldCondition('PRB_person.registerblad_id', 'registerblad_id');
                     $conditions[] = new FieldCondition('fornavne', 'firstnames');
                     $conditions[] = new FieldCondition('efternavn', 'lastname');
                     $conditions[] = new FieldCondition('PRB_foedested.foedested', 'birthplace');
@@ -202,16 +203,18 @@
                     * firstnames (string)
                     * lastname (string)
                     * birthplace (string)
-                    * dateofbirth (date)
-                    * dateofdeath (date)
+                    * birthdate (date)
+                    * deathdate (date)
                     * freetext (string, separated by ";")
                     */                          
-                     
+                    $conditions[] = new FieldCondition('PRB_person.person_id', 'id');
+                    $conditions[] = new FieldCondition('PRB_person.registerblad_id', 'registerblad_id');
+                    
                     $conditions[] = new FieldCondition('PRB_person.fornavne', 'firstnames', $this->getParameter('firstnames', 'string', false), '%LIKE%');
                     $conditions[] = new FieldCondition('PRB_person.efternavn', 'lastname', $this->getParameter('lastname', 'string', false), '%LIKE%');
                     $conditions[] = new FieldCondition('PRB_foedested.foedested', 'birthplace', $this->getParameter('birthplace', 'string', false), 'LIKE');
-                    $conditions[] = new FieldCondition('PRB_person.afdoed_dato', 'dateofdeath', $this->getParameter('dateofdeath', 'string', false), '=');
-                    $conditions[] = new FieldCondition('PRB_person.foedselsdato', 'dateofbirth', $this->getParameter('dateofbirth', 'string', false), '=');
+                    $conditions[] = new FieldCondition('DATE_FORMAT(PRB_person.foedselsdato, \'%d-%m-%Y\' )', 'dateofbirth', $this->getParameter('birthdate', 'string', false), '=');
+                    $conditions[] = new FieldCondition('DATE_FORMAT(PRB_person.afdoed_dato, \'%d-%m-%Y\' )', 'dateofdeath', $this->getParameter('deathdate', 'string', false), '=');                    
                     $conditions[] = new FieldCondition('PRB_fulltext.fulltext', 'freetext', $this->getParameter('freetext', 'string', false), '%LIKE%', false);
            
                     $joins = 'PRB_person 
@@ -223,6 +226,46 @@
                     
                     break;
                     
+                case 'registerblad':
+                    
+                    $conditions[] = new FieldCondition('PRB_registerblad.registerblad_id', 'id', $this->getParameter('id', 'int', false), '=', false);
+                    
+                    $conditions[] = new FieldCondition('CONCAT(udfyldelse_dag, \'-\', udfyldelse_maaned, \'-\', udfyldelse_aar)','date');
+
+                    $conditions[] = new FieldCondition('complete');
+                    $conditions[] = new FieldCondition('beskrivelse', 'station');
+                    $conditions[] = new FieldCondition('PRB_filmrulle.nummer', 'roll');
+                    //Image adress
+                    
+                    $joins = 'PRB_registerblad
+                        LEFT JOIN PRB_station ON PRB_registerblad.station_id = PRB_station.station_id
+                        LEFT JOIN PRB_filmrulle ON PRB_registerblad.filmrulle_id = PRB_filmrulle.filmrulle_id';
+                    
+                    break;
+                
+                case 'address':
+                    
+                    $conditions[] = new FieldCondition('adresse_id', 'id', $this->getParameter('id', 'int', false), '=', true);
+                    $conditions[] = new FieldCondition('registerblad_id', false, $this->getParameter('registerblad_id', 'int', false), '=', true);
+                    $conditions[] = new FieldCondition('navn', 'roadname');
+                    $conditions[] = new FieldCondition('vejnummer', 'number');
+                    $conditions[] = new FieldCondition('vejnummerbogstav', 'letter');
+                    $conditions[] = new FieldCondition('etage', 'floor');
+                    $conditions[] = new FieldCondition('sideangivelse', 'side');
+                    $conditions[] = new FieldCondition('sted', 'place');
+                    $conditions[] = new FieldCondition('DATE_FORMAT(adresse_dato, \'%d-%m-%Y\' )', 'date');
+                    
+                    $joins = 'PRB_adresse LEFT JOIN PRB_vej ON PRB_adresse.vej_id = PRB_vej.vej_id';
+                    break;
+                
+                case 'road':
+                    
+                    $conditions[] = new FieldCondition('vej_id', 'id', $this->getParameter('id', 'int', false), '=', true);
+                    $conditions[] = new FieldCondition('navn', 'name', $this->getParameter('name', 'string', false), '%LIKE%', true);
+                    
+                    $joins = 'PRB_vej';
+                    break;                
+                
                 case 'heatmap': 
                     /*
                      * API:
@@ -238,7 +281,7 @@
        
                     $startdate = $this->getParameter('startdate', 'date', false);
                     $enddate = $this->getParameter('enddate', 'date', false);
-APIConfig::$debug = true;
+//APIConfig::$debug = true;
                    // $conditions[] = new FieldCondition('PRB_adresse.adresse_dato', null, $startdate, '>', false);
                    // $conditions[] = new FieldCondition('PRB_adresse.adresse_dato', null, $enddate, '<', false);
                     $conditions[] = new FieldCondition('COUNT(adresse_id)', 'weight');
@@ -566,14 +609,14 @@ APIConfig::$debug = true;
                      * tags
                      *
                      */  
-                   
+                    //APIConfig::$debug = true;
                     $conditions[] = new FieldCondition('id', null, $this->getParameter('id', 'int'), '=', true);
                     $conditions[] = new FieldCondition('name');
                     $conditions[] = new FieldCondition('header_en');
                     $conditions[] = new FieldCondition('content_da');
                     $conditions[] = new FieldCondition('content_en');
                     $conditions[] = new FieldCondition('geometry');
-                    $conditions[] = new FieldCondition('tags', null, rawurldecode($this->getParameter('tags', 'string')), 'LIKE', true);
+                    $conditions[] = new FieldCondition('tags', null, rawurldecode($this->getParameter('tags', 'string')), '%LIKE%', true);
                     
                     $joins = 'ksa_mapdata';
                     

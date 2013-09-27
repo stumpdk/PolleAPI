@@ -1,0 +1,114 @@
+<!--
+To change this template, choose Tools | Templates
+and open the template in the editor.
+-->
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Politietsregisterblade.dk API 1.0</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <!-- Latest compiled and minified CSS, Twitter Bootstrap -->
+        <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+    </head>
+    <body>
+        <div class="container">
+            <div class="row-fluid">
+                <div class="span9">
+                    <h2>Politietsregisterblade, API v. 1.0</h2>
+                    <p>Politietsregisterblade.dk offers the following services for free use, as long as the server load is within a reasonable level.</p>
+                    <p>A note on the data structure: The central variable in the system is the card of registration (registerblad). Often, several persons is mentioned on the card. At the same time, several addresses can be written on the card. This is why addresses and persons are not directly related. The id of the card of registration (registerblad_id) is used to connect those informations.</p>
+                </div>
+                <div class="span9">
+                    <h4>Persons</h4>
+                    <p>
+                        <span class="label label-success">Service</span> <strong>http://www.politietsregisterblade.dk/api/1?type=person</strong>
+                    </p>
+                    <p>Retrives a list of persons based on a specific search in specified data concerning the person.</p>
+                    <p>
+                        Parameters:
+                    </p>
+                    <ul>
+                        <li><strong>firstnames:</strong> The first name of the person. Several conditions is separated by ";"</li>
+                        <li><strong>lastname:</strong> The last name of the person. Several conditions is separated by ";"</li>
+                        <li><strong>birthplace:</strong> The birthplace of the person</li>
+                        <li><strong>birthdate</strong> The date of birth of the person. The expected date format is dd-mm-yyyy</li>
+                        <li><strong>deathdate:</strong> The date of death of the person. The expected date format is dd-mm-yyyy</li>
+                        <li><strong>freetext:</strong> A free text search, similar to the freetext-service mentioned above. Several conditions is separated by ";"</li>
+                    </ul>
+                    <span class="label label-info">Example</span>
+                    <a target="_blank" href="http://www.politietsregisterblade.dk/api/1?type=person&firstnames=marie&birthdate=01-01-1903">http://www.politietsregisterblade.dk/api/1?type=person&firstnames=marie&birthdate=01-01-1903</a>
+                </div>
+                <div class="span9">&nbsp;</div>
+                <div class="span9">
+                    <h4>Addresses</h4>
+                    <p>
+                        <span class="label label-success">Service</span><strong> http://www.politietsregisterblade.dk/api/1?type=address</strong>
+                    </p>
+                    <p>
+                        Retrives a list of addresses based on an id or the id of the registerblad.</p>
+                    <p>
+                        Parameters:
+                    </p>
+                    <ul>
+                        <li><strong>id:</strong> The address id to search for</li>
+                        <li><strong>registerblad_id:</strong> The registerblad id to search for</li>
+                    </ul>
+                    <span class="label label-info">Example</span>
+                    <a target="_blank" href="http://www.politietsregisterblade.dk/api/1?type=address&id=1">http://www.politietsregisterblade.dk/api/1?type=address&id=1</a>
+                </div>
+                <div class="span9">&nbsp;</div>
+                <div class="span9">
+                    <h4>Roads</h4>
+                    <p>
+                        <span class="label label-success">Service</span><strong> http://www.politietsregisterblade.dk/api/1?type=road</strong>
+                    </p>
+                    <p>
+                        Retrives a list of roads in Copenhagen for the period 1890 to 1924.</p>
+                    <p>
+                        Parameters:
+                    </p>
+                    <ul>
+                        <li><strong>id:</strong> The id of the road</li>
+                        <li><strong>name:</strong> The name (or part of the name) of the road</li>
+                    </ul>
+                    <span class="label label-info">Example</span>
+                    <a target="_blank" href="http://www.politietsregisterblade.dk/api/1?type=road&name=gade">http://www.politietsregisterblade.dk/api/1?type=road&name=gade</a>
+                </div>                 
+                <div class="span9">&nbsp;</div>
+                <div class="span9">
+                    <h4>Cards of registration (registerblade)</h4>
+                    <p>
+                        <span class="label label-success">Service</span><strong> http://www.politietsregisterblade.dk/api/1?type=registerblad</strong>
+                    </p>
+                    <p>
+                        Retrives a list of registerblade based on the id of the registerblad.</p>
+                    <p>
+                        Parameters:
+                    </p>
+                    <ul>
+                        <li><strong>id:</strong> The registerblad id to search for</li>
+                    </ul>
+                    <span class="label label-info">Example</span>
+                    <a target="_blank" href="http://www.politietsregisterblade.dk/api/1?type=registerblad&id=1323659">http://www.politietsregisterblade.dk/api/1?type=registerblad&id=1323659</a>
+                </div>                     
+                <div class="span9">&nbsp;</div>
+                <div class="span9">
+                    <h4>Free text</h4>
+                    <p>
+                        <span class="label label-success">Service</span><strong> http://www.politietsregisterblade.dk/api/1?type=freetext</strong>
+                    </p>
+                    <p>
+                        Based on all informations related to the card of registration, this search returns persons that matches the filters.</p>
+                    <p>
+                        Parameters:
+                    </p>
+                    <ul>
+                        <li><strong>filter:</strong> The text to search for</li>
+                    </ul>
+                    <span class="label label-info">Example</span>
+                    <a target="_blank" href="http://www.politietsregisterblade.dk/api/1?type=freetext&filter=anders;abildgaardsgade">http://www.politietsregisterblade.dk/api/1?type=freetext&filter=anders;abildgaardsgade</a>
+                </div>                  
+            </div>
+        </div>
+    </body>
+</html>
