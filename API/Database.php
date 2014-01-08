@@ -19,6 +19,10 @@ class Database {
     private function __construct()
     {
         $this->mysqli = new mysqli(APIConfig::$dbhost, APIConfig::$dbuser, APIConfig::$dbpass, APIConfig::$dbname);
+        if ($this->mysqli->connect_error) {
+            die('Connect Error (' . $this->mysqli->connect_errno . ') '
+                    . $this->mysqli->connect_error);
+        }
         $this->mysqli->set_charset(APIConfig::$dbCharSet);
     }
     
