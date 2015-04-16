@@ -13,6 +13,6 @@ class FieldConditionTest extends PHPUnit_Framework_TestCase
     {
         $fc = new FieldCondition('testField', null, 'value', 'LIKE');
         
-        $this->assertEquals($fc->operator, "LIKE \'|VALUE|\'", "should convert operator when given");
+        $this->assertEquals($fc->operator, "LIKE '|VALUE|'", "should convert operator when given");
     }
 }
