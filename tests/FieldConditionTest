@@ -1,0 +1,13 @@
+<?php
+
+class FieldConditionTest extends PHPUnit_Framework_TestCase
+{
+    // ...
+    public function NoOperator()
+    {
+        $fc = new FieldCondition($field, $alias = null, $value = null, $operator = null, $includeInResult = true);
+        $fc = new FieldCondition('testField');
+        // Assert
+        $this->assertEquals($fc->operator, null);
+    }
+}
