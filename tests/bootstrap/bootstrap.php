@@ -1,4 +1,4 @@
 echo 'bootstrap ran';
-include_once('AutoLoader.php');
+include_once('../../API/FieldCondition.php');
 // Register the directory to your include files
-AutoLoader::registerDirectory('../../API');
+//AutoLoader::registerDirectory('../../API');
