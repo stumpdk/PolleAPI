@@ -1,4 +1,5 @@
 <?php
+echo 'her:' . getcwd();
 require_once "../API/FieldCondition.php";
 class FieldConditionTest extends PHPUnit_Framework_TestCase
 {
