@@ -1,4 +1,4 @@
-PolleAPI
+PolleAPI [![Build Status](https://travis-ci.org/stumpdk/PolleAPI.svg?branch=master)](https://travis-ci.org/stumpdk/PolleAPI)
 ========
 
 The PolleAPI is a simple API module made for the crowdsourcing project politietsregisterblade.dk, and is used to serve data internal and external for users who wants to use the data.
