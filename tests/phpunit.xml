@@ -1,10 +1,6 @@
 <phpunit>
   <testsuites>
-<<<<<<< HEAD
     <testsuite name="Test">
-=======
-    <testsuite name="Test" bootstrap="bootstrap.php" verbose="true">
->>>>>>> master
       <directory>../tests</directory>
     </testsuite>
   </testsuites>
