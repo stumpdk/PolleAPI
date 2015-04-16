@@ -1,6 +1,6 @@
 <phpunit>
   <testsuites>
-    <testsuite name="Test" verbose="true" bootstrap="tests/bootstrap.php">
+    <testsuite name="Test" bootstrap="../tests/bootstrap.php" verbose="true">
       <directory>../tests</directory>
     </testsuite>
   </testsuites>
