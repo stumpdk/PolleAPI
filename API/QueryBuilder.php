@@ -97,7 +97,7 @@
                 $firstRun = true;
                 foreach($this->fieldConditions as $curCondition){
                     //If both value and operator is set, the condition is created
-                    if($curCondition->value && strlen(trim($curCondition->value))>0 && $curCondition->operator){
+                    if($curCondition->value !== null && strlen(trim($curCondition->value))>0 && $curCondition->operator){
                         //Adding 'WHERE' in first run
                         if($firstRun) { $conditions = ' WHERE '; $firstRun = false; }
                         
