@@ -67,10 +67,10 @@
                 $fields = substr($fields, 0, strlen($fields)-2);
             }
             else{
-                $fields = ' * ';
+                $fields = '*';
             }
-            
-            $this->sqlQuery = trim(str_replace('%FIELDS%', $fields, $this->sqlQuery));
+            $fields = trim($fields);
+            $this->sqlQuery = str_replace('%FIELDS%', $fields, $this->sqlQuery);
         }
 
         /**
@@ -79,7 +79,7 @@
         private function addJoinsToQuery()
         {
             if($this->joins){
-                $this->joins = ' FROM ' . trim($this->joins);
+                $this->joins = 'FROM ' . trim($this->joins);
                 $this->sqlQuery = str_replace('%JOINS%', $this->joins, $this->sqlQuery);            
             }
             else{
@@ -99,7 +99,7 @@
                     //If both value and operator is set, the condition is created
                     if($curCondition->value !== null && strlen(trim($curCondition->value))>0 && $curCondition->operator){
                         //Adding 'WHERE' in first run
-                        if($firstRun) { $conditions = ' WHERE '; $firstRun = false; }
+                        if($firstRun) { $conditions = 'WHERE '; $firstRun = false; }
                         
                         
                         //The parameters is split by ";".
@@ -139,8 +139,8 @@
             else{
                 $conditions = ' ';
             }
-            
-            $this->sqlQuery = trim(str_replace('%CONDITIONS%', $conditions, $this->sqlQuery));            
+            $conditions = trim($conditions);
+            $this->sqlQuery = str_replace('%CONDITIONS%', $conditions, $this->sqlQuery);            
         }
         
         /**
