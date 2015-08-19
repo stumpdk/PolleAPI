@@ -130,9 +130,11 @@
                         }
                     }
                 }
-
-                //Removing the last ' AND '
-                $conditions = substr($conditions, 0, strlen($conditions)-(strlen($this->selectType)+2));
+                
+                if(strlen(trim($conditions))>0){
+                    //Removing the last ' AND '
+                    $conditions = substr($conditions, 0, strlen($conditions)-(strlen($this->selectType)+2));
+                }
             }
             else{
                 $conditions = ' ';
