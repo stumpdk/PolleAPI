@@ -140,7 +140,7 @@
                 $conditions = ' ';
             }
             $conditions = trim($conditions);
-            $this->sqlQuery = str_replace('%CONDITIONS%', $conditions, $this->sqlQuery);            
+            $this->sqlQuery = trim(str_replace('%CONDITIONS%', $conditions, $this->sqlQuery));            
         }
         
         /**
