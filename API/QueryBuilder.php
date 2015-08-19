@@ -2,7 +2,7 @@
 
     class QueryBuilder{
         //public $sqlResult;
-        public $sqlQuery = 'SELECT %FIELDS% %JOINS% %CONDITIONS% %GROUPBY% %ORDERBY% LIMIT %LIMIT%';
+        public $sqlQuery = 'SELECT %FIELDS% %JOINS% %CONDITIONS%%GROUPBY%%ORDERBY%LIMIT %LIMIT%';
         private $fieldConditions;
         private $conditionsAsString;
         private $generalLimit;
