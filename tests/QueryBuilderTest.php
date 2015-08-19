@@ -1,4 +1,5 @@
 <?php
+require_once "./API/APIConfig.php";
 require_once "./API/QueryBuilder.php";
 require_once "./API/FieldCondition.php";
 class QueryBuilderTest extends PHPUnit_Framework_TestCase
