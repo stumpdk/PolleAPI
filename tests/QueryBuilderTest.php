@@ -13,6 +13,6 @@ class QueryBuilderTest extends PHPUnit_Framework_TestCase
         $qb = new QueryBuilder($fc, $join);
         
         // Assert
-        $this->assertEquals($qb->sqlQuery, "SELECT testField FROM test_table WHERE testField = '0'   LIMIT " . APIConfig::$generalQueryLimit, "should add 0 as value");
+        $this->assertEquals($qb->sqlQuery, "SELECT testField FROM test_table WHERE testField = '0' LIMIT " . APIConfig::$generalQueryLimit, "should add 0 as value");
     }
 }
