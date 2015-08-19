@@ -70,7 +70,7 @@
                 $fields = ' * ';
             }
             
-            $this->sqlQuery = str_replace('%FIELDS%', $fields, $this->sqlQuery);
+            $this->sqlQuery = trim(str_replace('%FIELDS%', $fields, $this->sqlQuery));
         }
 
         /**
@@ -79,7 +79,7 @@
         private function addJoinsToQuery()
         {
             if($this->joins){
-                $this->joins = ' FROM ' . $this->joins;
+                $this->joins = ' FROM ' . trim($this->joins);
                 $this->sqlQuery = str_replace('%JOINS%', $this->joins, $this->sqlQuery);            
             }
             else{
@@ -140,7 +140,7 @@
                 $conditions = ' ';
             }
             
-            $this->sqlQuery = str_replace('%CONDITIONS%', $conditions, $this->sqlQuery);            
+            $this->sqlQuery = trim(str_replace('%CONDITIONS%', $conditions, $this->sqlQuery));            
         }
         
         /**
@@ -174,7 +174,7 @@
          */
         private function addLimitToQuery()
         {
-            $this->sqlQuery = str_replace('%LIMIT%', $this->queryLimit, $this->sqlQuery);
+            $this->sqlQuery = trim(str_replace('%LIMIT%', $this->queryLimit, $this->sqlQuery));
         } 
         
         public function toJSON(){
